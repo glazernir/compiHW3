@@ -5,9 +5,12 @@
 #ifndef COMPI_HW3_SYMBOTABLE_H
 #define COMPI_HW3_SYMBOTABLE_H
 
-//this is a commant and i want to die!!!!!!!1
-////
-class SymboTable {
+
+
+
+
+//================================================================= up side is types and down side is symboltable
+class SymbolTable {
 
 };
 

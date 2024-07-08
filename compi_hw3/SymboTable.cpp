@@ -3,3 +3,14 @@
 //
 
 #include "SymboTable.h"
+
+
+
+
+
+
+
+
+
+
+//=================================================================== up side is types and down side is symboltable
