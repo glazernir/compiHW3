@@ -5,6 +5,7 @@
 #ifndef COMPI_HW3_SYMBOTABLE_H
 #define COMPI_HW3_SYMBOTABLE_H
 
+//this is a commant
 
 class SymboTable {
 
