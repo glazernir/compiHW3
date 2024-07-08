@@ -5,7 +5,7 @@
 #ifndef COMPI_HW3_SYMBOTABLE_H
 #define COMPI_HW3_SYMBOTABLE_H
 
-//this is a commant and i want to die!
+//this is a commant and i want to die!!
 
 class SymboTable {
 
