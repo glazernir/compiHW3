@@ -42,7 +42,7 @@ rule CXX_EXECUTABLE_LINKER__compi_hw3_Debug
 # Rule for re-running cmake.
 
 rule RERUN_CMAKE
-  command = "C:\Program Files\JetBrains\CLion 2021.3.4\bin\cmake\win\bin\cmake.exe" --regenerate-during-build -SC:\Users\Nir\CLionProjects\compi_hw3 -BC:\Users\Nir\CLionProjects\compi_hw3\cmake-build-debug
+  command = "C:\Program Files\JetBrains\CLion 2021.3.4\bin\cmake\win\bin\cmake.exe" --regenerate-during-build -SC:\Users\Nir\CLionProjects\compiHW3\compi_hw3 -BC:\Users\Nir\CLionProjects\compiHW3\compi_hw3\cmake-build-debug
   description = Re-running CMake...
   generator = 1
 
