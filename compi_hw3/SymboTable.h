@@ -52,12 +52,11 @@ class SymbolTableStack{
     void insertSymbol(std::string name, std::string type,int offset,bool is_symbol_function,std::vector<std::string> functions_params);
 
     void make_table();
+    void pop_table();
 
     SymbolTableStack();
 
     ~SymbolTableStack() = default;
-
-
 
 };
 

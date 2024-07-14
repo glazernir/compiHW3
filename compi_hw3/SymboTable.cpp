@@ -11,18 +11,19 @@
 
 //================ Symbol methods =============================
 
-Symbol::Symbol(std::string name, std::string type, int offset, bool is_symbol_function) {
+Symbol::Symbol(std::string name, std::string type, int offset, bool is_symbol_function,
+               std::vector<std::string> functions_params) {
     this->Name = name;
-    this->Type = type;
     this->Offset = offset;
+    this->Type = type;
     this->isFunctionSymbol = is_symbol_function;
-
+    this->functionParams = functions_params;
 }
 
 
 //================ Symbol Table methods =============================
 
-void SymbolTable::InsertSymbol(const Symbol &symbol) {
+void SymbolTable::insertSymbol(const Symbol &symbol) {
     Symbol* s = new Symbol(symbol);
     this->Table.push_back(s);
     if(s->Offset >= 0){
