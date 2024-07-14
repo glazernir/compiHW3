@@ -10,56 +10,122 @@
 
 
 
+class var_Node{
+public:
+    std::string val;
+    var_Node(const std::string& val);
+    virtual ~var_Node() = default;
+
+};
+
+class Program_Node: public var_Node{
+
+    //program -> statements
+    Program_Node();
+    ~Program_Node() = default;
+};
+
+class Exp_Node: public var_Node{
+
+
+};
+
+
+class Type_Node: public var_Node{
+public:
+    std::string type;
+    //TYPE -> INT | BOOL | BYTE
+    Type_Node(std::string type);
+    ~Type_Node() = default;
+};
+
+class Call_Node: public var_Node{
+public:
+    std::string type;
+    //𝐶𝑎𝑙𝑙 → 𝐼𝐷 𝐿𝑃𝐴𝑅𝐸𝑁 𝐸𝑥𝑝 𝑅𝑃𝐴𝑅𝐸𝑁
+    Call_Node(var_Node* ,Exp_Node* );
+    ~Call_Node() = default;
+};
+
+
+class Statement_Node: public var_Node{
+
+    //Statements -> LBRACE STATEMENT RBRACE
+    Statement_Node(var_Node* );
+    //Statements -> TYPE ID SC
+    Statement_Node(Type_Node* ,var_Node* );
+    //Statements -> TYPE ID ASSIGN Exp SC
+    Statement_Node(Type_Node* ,var_Node* ,Exp_Node* );
+    //Statements -> Call SC
+    Statement_Node(Call_Node* );
+
+
+
+};
+
+class Statements_Node: public var_Node{
+
+    //Statements -> Statement
+    Statements_Node(Statements_Node* );
+    //Statements -> Statements Statement
+    Statements_Node(Statements_Node* ,Statement_Node* );
+    ~Statements_Node() = default;
+};
+
+
+
+
+
+
 //================================================================= up side is types and down side is symboltable + stack
 //of symbol tables==========================
 
 class Symbol{
 
 public:
-    std::string Name;
-    std::string Type;
-    int Offset;
-    bool isFunctionSymbol;
-    std::vector<std::string> functionParams;
+    std::string symbol_Name;
+    std::string symbol_Type;
+    int symbol_Offset;
+    bool is_symbol_function;
+    std::string arg_type;
 
-
-    Symbol(std::string name, std::string type,int offset,bool is_symbol_function,std::vector<std::string> functions_params);
+    Symbol(std::string, std::string ,int ,bool,std::string);
     ~Symbol() = default;
-
 };
 
 
-class SymbolTable {
+class Symbol_Table {
 public:
+    //symbol table fields
     std::vector<Symbol*> Table;
-    int last_var_offset;
-
-    SymbolTable();
-
-    void insertSymbol(const Symbol &symbol);
-    bool isSymbolInTable(const std::string &name);
+    bool is_while_scope;
 
 
-    ~SymbolTable() = default;
+    //symbol table methods
+    Symbol_Table(bool );
+    void insert_Symbol_to_table(const Symbol &);
+    bool is_symbol_in_table(const std::string &);
+    Symbol* get_symbol_from_table(const std::string& );
+    ~Symbol_Table() = default;
 };
 
 
-class SymbolTableStack{
+class Symbol_Table_Stack{
 
-    std::vector<SymbolTable*> symbol_table_stack;
+    std::vector<Symbol_Table*> symbol_table_stack;
     std::vector<int> offset_stack;
 
-    void insertSymbol(std::string name, std::string type,int offset,bool is_symbol_function,std::vector<std::string> functions_params);
+    Symbol_Table_Stack();
+    void insert_Symbol_to_stack(std::string , std::string ,bool ,std::string);
+    bool is_symbol_in_stack(const std::string &);
+    bool while_scope_exist();
+    Symbol* get_symbol_by_name(const std::string&);
 
-    void make_table();
+    void print_scope(const Symbol_Table &);
+    void make_table(bool scope_is_loop);
     void pop_table();
-
-    SymbolTableStack();
-
-    ~SymbolTableStack() = default;
-
+    ~Symbol_Table_Stack() = default;
 };
-
 
 
 
