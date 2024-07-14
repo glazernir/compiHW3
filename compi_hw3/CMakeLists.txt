@@ -3,4 +3,4 @@ project(compi_hw3)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(compi_hw3 main.cpp hw3_output.hpp hw3_output.hpp SymboTable.cpp SymboTable.h)
+add_executable(compi_hw3 main.cpp hw3_output.cpp hw3_output.hpp SymboTable.cpp SymboTable.h)
