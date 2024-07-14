@@ -14,6 +14,7 @@
 //of symbol tables==========================
 
 class Symbol{
+
 public:
     std::string Name;
     std::string Type;
