@@ -6,6 +6,7 @@
 #include <utility>
 #include "hw3_output.hpp"
 extern int yylineno;
+extern symbol_table_stack symbol_table_stack;
 
 
 bool is_matching (string first, string second)
@@ -57,12 +58,12 @@ Exp_Obj::Exp_Obj(const std::string &str, Object *first_term, Object *second_term
     Exp_Obj *exp1 = dynamic_cast<Exp_Obj *>(first_term);
     Exp_Obj *exp2 = dynamic_cast<Exp_Obj *>(second_term);
 
-    if (exp1->var && !Symbol_Table_Stack().is_symbol_in_stack(exp1->name)) {
+    if (exp1->var && !symbol_table_stack.is_symbol_in_stack(exp1->name)) {
         output::errorUndef(yylineno, first_term->name);
         exit(0);
     }
 
-    if (exp2->var && !Symbol_Table_Stack().is_symbol_in_stack(exp2->name)) {
+    if (exp2->var && !symbol_table_stack.is_symbol_in_stack(exp2->name)) {
         output::errorUndef(yylineno, second_term->name);
         exit(0);
     }
@@ -104,13 +105,13 @@ Exp_Obj::Exp_Obj(const std::string &str, Object *first_term, Object *second_term
 
 ///for Exp -> ID, CALL
 Exp_Obj::Exp_Obj(const std::string &str, bool var, Object *term): Object(str) {
-    if (var && !Symbol_Table_Stack().is_symbol_in_stack(term->name)) {
+    if (var && !symbol_table_stack.is_symbol_in_stack(term->name)) {
         output::errorUndef(yylineno, term->name);
         exit(0);
     }
     this->var = var;
     this->name = term->name;
-    this->type = Symbol_Table_Stack().get_symbol_by_name(term->name)->symbol_Type;
+    this->type = symbol_table_stack.get_symbol_by_name(term->name)->symbol_Type;
 
 }
 
@@ -139,37 +140,37 @@ Exp_Obj::Exp_Obj(const std::string &str, Exp_Obj *exp) : Object(str){
 Call_Obj::Call_Obj(const std::string &str, Object *first_term, Object *second_term): Object(str) {
     Exp_Obj *_exp = dynamic_cast<Exp_Obj *>(second_term);
 
-    if (!Symbol_Table_Stack().get_symbol_by_name(first_term->name)) {
+    if (!symbol_table_stack.get_symbol_by_name(first_term->name)) {
         output::errorUndefFunc(yylineno, first_term->name);
         exit(0);
     }
 
-    if (!Symbol_Table_Stack().get_symbol_by_name(first_term->name)->is_symbol_function) {
+    if (!symbol_table_stack.get_symbol_by_name(first_term->name)->is_symbol_function) {
         output::errorUndefFunc(yylineno, first_term->name);
         exit(0);
     }
 
-    if (Symbol_Table_Stack().get_symbol_by_name(first_term->name)->arg_type != _exp->type) {
-        if (Symbol_Table_Stack().get_symbol_by_name(first_term->name)->arg_type != "int" || _exp->type != "byte") {
-            output::errorPrototypeMismatch(yylineno, first_term->name, Symbol_Table_Stack().get_symbol_by_name(first_term->name)->arg_type);
+    if (symbol_table_stack.get_symbol_by_name(first_term->name)->arg_type != _exp->type) {
+        if (symbol_table_stack.get_symbol_by_name(first_term->name)->arg_type != "int" || _exp->type != "byte") {
+            output::errorPrototypeMismatch(yylineno, first_term->name, symbol_table_stack.get_symbol_by_name(first_term->name)->arg_type);
             exit(0);
         }
     }
 
-    this->type = Symbol_Table_Stack().get_symbol_by_name(first_term->name)->symbol_Type;
-    this->name = Symbol_Table_Stack().get_symbol_by_name(second_term->name)->symbol_Name;
+    this->type = symbol_table_stack.get_symbol_by_name(first_term->name)->symbol_Type;
+    this->name = symbol_table_stack.get_symbol_by_name(second_term->name)->symbol_Name;
 }
 
 
-///for Statement -> BREAK SC, CONTINUE SC
+///for Statement -> BREAK SC, CONTINUE SC, RETURN SC
 State_Obj::State_Obj(const std::string &str, Object *term): Object(str) {
     if (term->name == "break") {
-        if (!Symbol_Table_Stack().while_scope_exist()) {
+        if (!symbol_table_stack.while_scope_exist()) {
             output::errorUnexpectedBreak(yylineno);
             exit(0);
         }
     } else if (term->name == "continue") {
-        if (!Symbol_Table_Stack().while_scope_exist()) {
+        if (!symbol_table_stack.while_scope_exist()) {
             output::errorUnexpectedContinue(yylineno);
             exit(0);
         }
@@ -178,42 +179,34 @@ State_Obj::State_Obj(const std::string &str, Object *term): Object(str) {
 
 ///for Statement -> Type ID SC
 State_Obj::State_Obj(const std::string &str, Type_Obj *type, Object *term): Object(str) {
-    if (Symbol_Table_Stack().is_symbol_in_stack(term->name)) {
+    if (symbol_table_stack.is_symbol_in_stack(term->name)) {
         output::errorDef(yylineno, term->name);
         exit(0);
     }
-    //Symbol_Table_Stack().insert_Symbol_to_stack(term->name, type->type, false,);  need other function for that fix later
+    symbol_table_stack.insert_Symbol_to_stack(term->name, type->type, false, "");
     this->name = type->name;
 }
 
 ///for Statement -> Type ID ASSIGN Exp SC
 State_Obj::State_Obj(const std::string &str, Type_Obj *type, Object *term, Exp_Obj *exp): Object(str) {
-    if (Symbol_Table_Stack().is_symbol_in_stack(term->name)) {
+    if (symbol_table_stack.is_symbol_in_stack(term->name)) {
         output::errorDef(yylineno, term->name);
         exit(0);
     }
-    if (type) {
-        if (!(type->type == exp->type) || !(type->type =="int" && exp->type == "byte")) {
-            output::errorMismatch(yylineno);
-            exit(0);
-        }
-        //Symbol_Table_Stack().insert_Symbol_to_stack(term->name, type->type, false,);  need other function for that fix later
-    } else {
-        if (exp->type == "void" || exp->type == "string") {
-            output::errorMismatch(yylineno);
-            exit(0);
-        }
-        //Symbol_Table_Stack().insert_Symbol_to_stack(term->name, type->type, false,);  need other function for that fix later
+    if (!(type->type == exp->type) || !(type->type =="int" && exp->type == "byte")) {
+        output::errorMismatch(yylineno);
+        exit(0);
     }
+    symbol_table_stack.insert_Symbol_to_stack(term->name, type->type, false, "");
 }
 
 ///for Statement -> Call SC
 State_Obj::State_Obj(const std::string &str, Call_Obj *call): Object(str) {
-    if (!Symbol_Table_Stack().is_symbol_in_stack(call->name)) {
+    if (!symbol_table_stack.is_symbol_in_stack(call->name)) {
         output::errorUndefFunc(yylineno, call->name);
         exit(0);
     }
-    if (!Symbol_Table_Stack().get_symbol_by_name(call->name)->is_symbol_function) {
+    if (!symbol_table_stack.get_symbol_by_name(call->name)->is_symbol_function) {
         output::errorUndefFunc(yylineno, call->name);
         exit(0);
     }
@@ -221,27 +214,30 @@ State_Obj::State_Obj(const std::string &str, Call_Obj *call): Object(str) {
 
 ///for Statement -> ID ASSIGN Exp SC
 State_Obj::State_Obj(const std::string &str, Object *term, Exp_Obj *exp): Object(str) {
-    if (!Symbol_Table_Stack().is_symbol_in_stack(term->name)) {
+    if (!symbol_table_stack.is_symbol_in_stack(term->name)) {
         output::errorUndef(yylineno, term->name);
         exit(0);
     }
-    if (Symbol_Table_Stack().get_symbol_by_name(term->name)->is_symbol_function || !(Symbol_Table_Stack().get_symbol_by_name(term->name)->symbol_Type == exp->type)|| !(Symbol_Table_Stack().get_symbol_by_name(term->name)->symbol_Type == "int" && exp->type == "byte")) {
+    if (symbol_table_stack.get_symbol_by_name(term->name)->is_symbol_function || !(symbol_table_stack.get_symbol_by_name(term->name)->symbol_Type == exp->type) || !(symbol_table_stack().get_symbol_by_name(term->name)->symbol_Type == "int" && exp->type == "byte")) {
         output::errorMismatch(yylineno);
         exit(0);
     }
 }
 
+///for Statement -> IF LPAREN Exp RPAREN Statement, IF LPAREN Exp RPAREN Statement ELSE Statement, WHILE LPAREN Exp RPAREN Statement
 State_Obj::State_Obj(const std::string &str, const std::string name, Exp_Obj *exp): Object(str) {
-
+    if (exp->type != "bool") {
+        output::errorMismatch(yylineno);
+        exit(0);
+    }
 }
 
-State_Obj::State_Obj(const std::string &str, Exp_Obj *exp, bool is_return): Object(str) {
 
-}
-
+///for Statements -> Statement
 States_Obj::States_Obj(const std::string &str, State_Obj *statement): Object(str) {
 }
 
+///for Statements -> Statements Statement
 States_Obj::States_Obj(const std::string &str, States_Obj *statements, State_Obj *statement): Object(str) {
 }
 
@@ -273,7 +269,7 @@ void Symbol_Table::insert_Symbol_to_table(const Symbol &symbol_to_insert) {
 
 //================================================ tables stack methods ===========================================
 
-Symbol_Table_Stack::Symbol_Table_Stack(): symbol_table_stack(),offset_stack()
+symbol_table_stack::symbol_table_stack(): symbol_table_stack(), offset_stack()
 {
     //the first variance in the first table will open in offset 0
     this->offset_stack.push_back(0);
@@ -282,7 +278,7 @@ Symbol_Table_Stack::Symbol_Table_Stack(): symbol_table_stack(),offset_stack()
     this->insert_Symbol_to_stack("print","int", true,{"int"});
 }
 
-void Symbol_Table_Stack::insert_Symbol_to_stack(std::string name,std::string type,bool isSymbolFunction,string argType)
+void symbol_table_stack::insert_Symbol_to_stack(std::string name, std::string type, bool isSymbolFunction, string argType = "")
 {
     Symbol_Table *curr_symbol_table = this->symbol_table_stack.back();
     int new_symbol_offset = (isSymbolFunction) ? 0 : this->offset_stack.back();
@@ -293,7 +289,7 @@ void Symbol_Table_Stack::insert_Symbol_to_stack(std::string name,std::string typ
     curr_symbol_table->insert_Symbol_to_table(Symbol(name, type, new_symbol_offset, isSymbolFunction, argType));
 }
 
-bool Symbol_Table_Stack::is_symbol_in_stack(const std::string &symbol_name)
+bool symbol_table_stack::is_symbol_in_stack(const std::string &symbol_name)
 {
     for (Symbol_Table* symbolTable:this->symbol_table_stack){
         if(symbolTable){
@@ -309,7 +305,7 @@ bool Symbol_Table_Stack::is_symbol_in_stack(const std::string &symbol_name)
     return false;
 }
 
-void Symbol_Table_Stack::make_table(bool scope_is_loop)
+void symbol_table_stack::make_table(bool scope_is_loop)
 {
     Symbol_Table* to_insert = new Symbol_Table(scope_is_loop);
     this->offset_stack.push_back(this->offset_stack.back());
@@ -333,7 +329,7 @@ string type_to_send(const string& type)
     return "VOID";
 }
 
-void Symbol_Table_Stack::print_scope(const Symbol_Table &symbol_table)
+void symbol_table_stack::print_scope(const Symbol_Table &symbol_table)
 {
     for (Symbol* s:symbol_table.Table)
     {
@@ -349,7 +345,7 @@ void Symbol_Table_Stack::print_scope(const Symbol_Table &symbol_table)
 }
 
 
-void Symbol_Table_Stack::pop_table()
+void symbol_table_stack::pop_table()
 {
     Symbol_Table* to_delete = this->symbol_table_stack.back();
     this->symbol_table_stack.pop_back();
@@ -362,7 +358,7 @@ void Symbol_Table_Stack::pop_table()
 }
 
 
-bool Symbol_Table_Stack::while_scope_exist()
+bool symbol_table_stack::while_scope_exist()
 {
     for (Symbol_Table* symbolTable:this->symbol_table_stack){
         if(symbolTable->is_while_scope){
@@ -372,7 +368,7 @@ bool Symbol_Table_Stack::while_scope_exist()
     return false;
 }
 
-Symbol *Symbol_Table_Stack::get_symbol_by_name(const std::string &symbol_name) {
+Symbol *symbol_table_stack::get_symbol_by_name(const std::string &symbol_name) {
     for (Symbol_Table* symbolTable:this->symbol_table_stack){
         if(symbolTable){
             for(Symbol* s: symbolTable->Table){

@@ -42,7 +42,7 @@ public:
 
     Exp_Obj(const std::string &str, Object *term, std::string type);
 
-    Exp_Obj(const std::string &str, Object *first_term, Object *second_term, const std::string operation, const std::string type);
+    Exp_Obj(const std::string &str, Object *first_term, Object *second_term, const std::string operation, const std::string type = "");
 
     Exp_Obj(const std::string &str, bool var, Object *term);
 
@@ -76,8 +76,6 @@ class State_Obj: public Object{
     State_Obj(const std::string &str, Object *term, Exp_Obj *exp);
 
     State_Obj(const std::string &str, const std::string name, Exp_Obj *exp);
-
-    State_Obj(const std::string &str, Exp_Obj *exp, bool is_return=false);
 
     ~State_Obj() override = default;
 
@@ -128,12 +126,12 @@ public:
 };
 
 
-class Symbol_Table_Stack{
+class symbol_table_stack{
 public:
     std::vector<Symbol_Table*> symbol_table_stack;
     std::vector<int> offset_stack;
 
-    Symbol_Table_Stack();
+    symbol_table_stack();
     void insert_Symbol_to_stack(std::string , std::string ,bool ,std::string);
     bool is_symbol_in_stack(const std::string &);
     bool while_scope_exist();
@@ -142,7 +140,7 @@ public:
     void print_scope(const Symbol_Table &);
     void make_table(bool scope_is_loop);
     void pop_table();
-    ~Symbol_Table_Stack() = default;
+    ~symbol_table_stack() = default;
 };
 
 
