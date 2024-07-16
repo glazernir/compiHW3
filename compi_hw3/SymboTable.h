@@ -5,76 +5,94 @@
 #ifndef COMPI_HW3_SYMBOTABLE_H
 #define COMPI_HW3_SYMBOTABLE_H
 
-#include "vector"
-#include "string"
+#include <vector>
+#include <string>
+#include <iostream>
 
-
-
-class var_Node{
+class Object{
 public:
-    std::string val;
-    var_Node(const std::string& val);
-    virtual ~var_Node() = default;
+    std::string name;
+    explicit Object(const std::string& str);
+    virtual ~Object() = default;
 
 };
 
-class Program_Node: public var_Node{
+class Prog_Obj: public Object{
 
     //program -> statements
-    Program_Node();
-    ~Program_Node() = default;
-};
-
-class Exp_Node: public var_Node{
-
-
+    explicit Prog_Obj(const std::string &str);
+    ~Prog_Obj() override = default;
 };
 
 
-class Type_Node: public var_Node{
+class Type_Obj: public Object{
 public:
     std::string type;
     //TYPE -> INT | BOOL | BYTE
-    Type_Node(std::string type);
-    ~Type_Node() = default;
+    explicit Type_Obj(const std::string &str, std::string type);
+    ~Type_Obj() override = default;
 };
 
-class Call_Node: public var_Node{
+class Exp_Obj: public Object{
 public:
     std::string type;
-    //𝐶𝑎𝑙𝑙 → 𝐼𝐷 𝐿𝑃𝐴𝑅𝐸𝑁 𝐸𝑥𝑝 𝑅𝑃𝐴𝑅𝐸𝑁
-    Call_Node(var_Node* ,Exp_Node* );
-    ~Call_Node() = default;
+    bool var=false;
+
+    explicit Exp_Obj(const std::string &str);
+
+    Exp_Obj(const std::string &str, Object *term, std::string type);
+
+    Exp_Obj(const std::string &str, Object *first_term, Object *second_term, const std::string operation, const std::string type);
+
+    Exp_Obj(const std::string &str, bool var, Object *term);
+
+    Exp_Obj(const std::string &str, Object *exp, Object *type);
+
+    Exp_Obj(const std::string &str, Exp_Obj *exp);
+
+    ~Exp_Obj() override = default;
+
+};
+
+class Call_Obj: public Object{
+public:
+    std::string type;
+    Call_Obj(const std::string &str, Object* first_term , Object* second_term);
+    ~Call_Obj() override = default;
 };
 
 
-class Statement_Node: public var_Node{
+class State_Obj: public Object{
 
     //Statements -> LBRACE STATEMENT RBRACE
-    Statement_Node(var_Node* );
+    State_Obj(const std::string &str, Object*term);
     //Statements -> TYPE ID SC
-    Statement_Node(Type_Node* ,var_Node* );
+    State_Obj(const std::string &str, Type_Obj*type , Object*term );
     //Statements -> TYPE ID ASSIGN Exp SC
-    Statement_Node(Type_Node* ,var_Node* ,Exp_Node* );
+    State_Obj(const std::string &str, Type_Obj*type , Object*term , Exp_Obj*exp );
     //Statements -> Call SC
-    Statement_Node(Call_Node* );
+    State_Obj(const std::string &str, Call_Obj* call);
+
+    State_Obj(const std::string &str, Object *term, Exp_Obj *exp);
+
+    State_Obj(const std::string &str, const std::string name, Exp_Obj *exp);
+
+    State_Obj(const std::string &str, Exp_Obj *exp, bool is_return=false);
+
+    ~State_Obj() override = default;
 
 
 
 };
 
-class Statements_Node: public var_Node{
+class States_Obj: public Object{
 
     //Statements -> Statement
-    Statements_Node(Statements_Node* );
+    States_Obj(const std::string &str, State_Obj* statement);
     //Statements -> Statements Statement
-    Statements_Node(Statements_Node* ,Statement_Node* );
-    ~Statements_Node() = default;
+    States_Obj(const std::string &str, States_Obj*statements , State_Obj*statement );
+    ~States_Obj() override = default;
 };
-
-
-
-
 
 
 //================================================================= up side is types and down side is symboltable + stack
@@ -102,7 +120,7 @@ public:
 
 
     //symbol table methods
-    Symbol_Table(bool );
+    explicit Symbol_Table(bool);
     void insert_Symbol_to_table(const Symbol &);
     bool is_symbol_in_table(const std::string &);
     Symbol* get_symbol_from_table(const std::string& );
@@ -111,7 +129,7 @@ public:
 
 
 class Symbol_Table_Stack{
-
+public:
     std::vector<Symbol_Table*> symbol_table_stack;
     std::vector<int> offset_stack;
 
