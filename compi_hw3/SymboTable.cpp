@@ -6,7 +6,7 @@
 #include <utility>
 #include "hw3_output.hpp"
 extern int yylineno;
-extern symbol_table_stack symbol_table_stack;
+extern symbol_table_stack symbol_table_stack;//
 
 
 bool is_matching (string first, string second)
@@ -218,7 +218,7 @@ State_Obj::State_Obj(const std::string &str, Object *term, Exp_Obj *exp): Object
         output::errorUndef(yylineno, term->name);
         exit(0);
     }
-    if (symbol_table_stack.get_symbol_by_name(term->name)->is_symbol_function || !(symbol_table_stack.get_symbol_by_name(term->name)->symbol_Type == exp->type) || !(symbol_table_stack().get_symbol_by_name(term->name)->symbol_Type == "int" && exp->type == "byte")) {
+    if (symbol_table_stack.get_symbol_by_name(term->name)->is_symbol_function || !(symbol_table_stack.get_symbol_by_name(term->name)->symbol_Type == exp->type) || !(symbol_table_stack.get_symbol_by_name(term->name)->symbol_Type == "int" && exp->type == "byte")) {
         output::errorMismatch(yylineno);
         exit(0);
     }
