@@ -1,5 +1,5 @@
 #include <iostream>
-#include "hw3_output.hpp"
+
 #include <sstream>
 
 using namespace std;
@@ -13,6 +13,7 @@ void output::printID(const string& id, int offset, const string& type) {
 }
 
 string output::makeFunctionType(const string& argType, const string& retType) {
+    
     
     return "(" + argType + ")" + "->" + retType;
 }

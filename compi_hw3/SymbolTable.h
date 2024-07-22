@@ -2,12 +2,16 @@
 // Created by Nir on 7/8/2024.
 //
 
-#ifndef COMPI_HW3_SYMBOTABLE_H
-#define COMPI_HW3_SYMBOTABLE_H
+#ifndef COMPI_HW3_SYMBOLTABLE_H
+#define COMPI_HW3_SYMBOLTABLE_H
 
 #include <vector>
 #include <string>
 #include <iostream>
+#include "hw3_output.hpp"
+
+
+
 
 class Object{
 public:
@@ -17,7 +21,10 @@ public:
 
 };
 
+#define YYSTYPE Object*
+
 class Prog_Obj: public Object{
+public:
 
     //program -> statements
     explicit Prog_Obj(const std::string &str);
@@ -63,6 +70,7 @@ public:
 
 
 class State_Obj: public Object{
+public:
 
     //Statements -> LBRACE STATEMENT RBRACE
     State_Obj(const std::string &str, Object*term);
@@ -84,6 +92,7 @@ class State_Obj: public Object{
 };
 
 class States_Obj: public Object{
+public:
 
     //Statements -> Statement
     States_Obj(const std::string &str, State_Obj* statement);
@@ -91,6 +100,8 @@ class States_Obj: public Object{
     States_Obj(const std::string &str, States_Obj*statements , State_Obj*statement );
     ~States_Obj() override = default;
 };
+
+void VerifyBool(Object* o);
 
 
 //================================================================= up side is types and down side is symboltable + stack
@@ -126,25 +137,26 @@ public:
 };
 
 
-class symbol_table_stack{
+class Symbol_table_stack{
 public:
     std::vector<Symbol_Table*> symbol_table_stack;
     std::vector<int> offset_stack;
 
-    symbol_table_stack();
+    Symbol_table_stack();
     void insert_Symbol_to_stack(std::string , std::string ,bool ,std::string);
     bool is_symbol_in_stack(const std::string &);
     bool while_scope_exist();
     Symbol* get_symbol_by_name(const std::string&);
-
+    void check_if_main_exists();
+    void printNS();
     void print_scope(const Symbol_Table &);
     void make_table(bool scope_is_loop);
     void pop_table();
-    ~symbol_table_stack() = default;
+    ~Symbol_table_stack() = default;
 };
 
 
 
 
 
-#endif //COMPI_HW3_SYMBOTABLE_H
+#endif //COMPI_HW3_SYMBOLTABLE_H

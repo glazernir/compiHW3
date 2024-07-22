@@ -72,8 +72,8 @@ build CMakeFiles/compi_hw3.dir/hw3_output.cpp.obj: CXX_COMPILER__compi_hw3_Debug
   OBJECT_DIR = CMakeFiles\compi_hw3.dir
   OBJECT_FILE_DIR = CMakeFiles\compi_hw3.dir
 
-build CMakeFiles/compi_hw3.dir/SymboTable.cpp.obj: CXX_COMPILER__compi_hw3_Debug C$:/Users/Nir/CLionProjects/compiHW3/compi_hw3/SymboTable.cpp || cmake_object_order_depends_target_compi_hw3
-  DEP_FILE = CMakeFiles\compi_hw3.dir\SymboTable.cpp.obj.d
+build CMakeFiles/compi_hw3.dir/SymbolTable.cpp.obj: CXX_COMPILER__compi_hw3_Debug C$:/Users/Nir/CLionProjects/compiHW3/compi_hw3/SymbolTable.cpp || cmake_object_order_depends_target_compi_hw3
+  DEP_FILE = CMakeFiles\compi_hw3.dir\SymbolTable.cpp.obj.d
   FLAGS = -g -std=gnu++14
   OBJECT_DIR = CMakeFiles\compi_hw3.dir
   OBJECT_FILE_DIR = CMakeFiles\compi_hw3.dir
@@ -86,7 +86,7 @@ build CMakeFiles/compi_hw3.dir/SymboTable.cpp.obj: CXX_COMPILER__compi_hw3_Debug
 #############################################
 # Link the executable compi_hw3.exe
 
-build compi_hw3.exe: CXX_EXECUTABLE_LINKER__compi_hw3_Debug CMakeFiles/compi_hw3.dir/main.cpp.obj CMakeFiles/compi_hw3.dir/hw3_output.cpp.obj CMakeFiles/compi_hw3.dir/SymboTable.cpp.obj
+build compi_hw3.exe: CXX_EXECUTABLE_LINKER__compi_hw3_Debug CMakeFiles/compi_hw3.dir/main.cpp.obj CMakeFiles/compi_hw3.dir/hw3_output.cpp.obj CMakeFiles/compi_hw3.dir/SymbolTable.cpp.obj
   FLAGS = -g
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\compi_hw3.dir
