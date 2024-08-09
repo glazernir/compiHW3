@@ -38,6 +38,7 @@ void VerifyBool(Object* o) {
 
 bool is_matching (string first, string second)
 {
+
     if (first == "bool" && second == "bool"|| first == "int" && second == "int"|| first == "byte" && second == "byte" || first == "int" && second == "byte" || first == "byte" && second == "int")
     {
         return true;
@@ -115,8 +116,8 @@ Exp_Obj::Exp_Obj(const std::string &str, Object *first_term, Object *second_term
             exit(0);
         }
         this->type = "bool";
-
     }
+
     else{
         if (exp1->type == "bool" || exp2->type == "bool") {
 
