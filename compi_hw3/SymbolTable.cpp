@@ -27,7 +27,6 @@ string type_to_send(const string& type)
     return "VOID";
 }
 
-
 void VerifyBool(Object* o) {
     Exp_Obj* o_exp = dynamic_cast<Exp_Obj*>(o);
     if (o_exp->type != "bool") {

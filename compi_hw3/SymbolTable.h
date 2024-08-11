@@ -44,6 +44,8 @@ class Exp_Obj: public Object{
 public:
     std::string type;
     bool var=false;
+    string register_val;
+
 
     explicit Exp_Obj(const std::string &str);
 
