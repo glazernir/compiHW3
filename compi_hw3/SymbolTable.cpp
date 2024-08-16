@@ -5,8 +5,12 @@
 #include "SymbolTable.h"
 #include <utility>
 #include "hw3_output.hpp"
+#include "cg.hpp"
+
+
 extern int yylineno;
 extern Symbol_table_stack symbolTableStack;
+
 
 #include "iostream"
 
@@ -319,7 +323,11 @@ Symbol::Symbol(std::string name, std::string type, int offset, bool isSymbolFunc
 //================ Symbol Table methods =============================
 
 Symbol_Table::Symbol_Table(bool isWhileScope): Table() {
+    CodeBuffer& Buffer = CodeBuffer::instance();
     this->is_while_scope = isWhileScope;
+    this->startScopeLabel = Buffer.freshLabel();
+    Buffer.emit("br label " + this->startScopeLabel);
+    Buffer.emit(this->startScopeLabel + ":");
 }
 
 void Symbol_Table::insert_Symbol_to_table(const Symbol &symbol_to_insert) {
@@ -439,4 +447,15 @@ Symbol *Symbol_table_stack::get_symbol_by_name(const std::string &symbol_name) {
 }
 
 
+Symbol_Table *Symbol_table_stack::getCurrerntWhileScope() {
+
+    for (int i = this->symbol_table_stack.size() - 1; i >= 0; i--){
+        if(this->symbol_table_stack[i]){
+            if(this->symbol_table_stack[i]->is_while_scope) {
+                return this->symbol_table_stack[i];
+            }
+        }
+    }
+    return nullptr;
+}
 

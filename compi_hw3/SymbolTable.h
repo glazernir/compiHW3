@@ -15,7 +15,9 @@
 
 class Object{
 public:
+public:
     std::string name;
+    std::string register_val;
     explicit Object(const std::string& str);
     virtual ~Object() = default;
 
@@ -44,7 +46,8 @@ class Exp_Obj: public Object{
 public:
     std::string type;
     bool var=false;
-    string register_val;
+    std::string trueLabel;
+    std::string falseLabel;
 
 
     explicit Exp_Obj(const std::string &str);
@@ -66,6 +69,7 @@ public:
 class Call_Obj: public Object{
 public:
     std::string type;
+
     Call_Obj(const std::string &str, Object* first_term , Object* second_term);
     ~Call_Obj() override = default;
 };
@@ -128,7 +132,8 @@ public:
     //symbol table fields
     std::vector<Symbol*> Table;
     bool is_while_scope;
-
+    std::string startScopeLabel;
+    std::string endScopeLabel;
 
     //symbol table methods
     explicit Symbol_Table(bool);
@@ -145,6 +150,7 @@ public:
     std::vector<int> offset_stack;
 
     Symbol_table_stack();
+    Symbol_Table* getCurrerntWhileScope();
     void insert_Symbol_to_stack(std::string , std::string ,bool ,std::string);
     bool is_symbol_in_stack(const std::string &);
     bool while_scope_exist();
