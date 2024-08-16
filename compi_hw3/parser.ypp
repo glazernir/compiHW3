@@ -48,10 +48,10 @@ Statement: LBRACE {symbolTableStack.make_table(false);} Statements {symbolTableS
                          SemanticAction_DefaultInitialize($2);}
 
            | Type ID ASSIGN Exp SC {$$ = new State_Obj($1->name,dynamic_cast<Type_Obj*>($1),$2,dynamic_cast<Exp_Obj*>($4));
-                                    SemanticAction_Store($2,dynamic_cast<Exp_Obj*>($4))}
+                                    SemanticAction_Store($2,dynamic_cast<Exp_Obj*>($4));}
 
            | ID ASSIGN Exp SC  {$$ = new State_Obj($1->name,$1,dynamic_cast<Exp_Obj*>($3));
-                                SemanticAction_Store($1,dynamic_cast<Exp_Obj*>($3))}
+                                SemanticAction_Store($1,dynamic_cast<Exp_Obj*>($3));}
 
            | Call SC  {$$ = new State_Obj($1->name,dynamic_cast<Call_Obj*>($1));}
 
@@ -63,22 +63,22 @@ Statement: LBRACE {symbolTableStack.make_table(false);} Statements {symbolTableS
                                               goto_False_Label(dynamic_cast<Exp_Obj*>($3));}
 
 
-           | IF LPAREN EVAL RPAREN Statement ELSE {symbolTableStack.pop_table(); createAndJumpTo(); goto_False_Label(dynamic_cast<Exp_Obj*>($3))} NS Statement {$$ = new State_Obj($1->name,dynamic_cast<Exp_Obj*>($3));
+           | IF LPAREN EVAL RPAREN Statement ELSE {symbolTableStack.pop_table(); createAndJumpTo(); goto_False_Label(dynamic_cast<Exp_Obj*>($3));} NS Statement {$$ = new State_Obj($1->name,dynamic_cast<Exp_Obj*>($3));
                                                                                                                                                                 symbolTableStack.pop_table();
-                                                                                                                                                                goto_True_Label(dynamic_cast<Exp_Obj*>($8))}
+                                                                                                                                                                goto_True_Label(dynamic_cast<Exp_Obj*>($8));}
 
-           | WHILE LPAREN VerifyBool RPAREN {symbolTableStack.make_table(true); SemanticAction_While(dynamic_cast<Exp_Obj*>($3))} Statement {$$ = new State_Obj($1->name,dynamic_cast<Exp_Obj*>($3));
+           | WHILE LPAREN VerifyBool RPAREN {symbolTableStack.make_table(true); SemanticAction_While(dynamic_cast<Exp_Obj*>($3));} Statement {$$ = new State_Obj($1->name,dynamic_cast<Exp_Obj*>($3));
                                                                                                                                              symbolTableStack.pop_table();}
 
            | BREAK SC {$$ = new State_Obj($1->name,$1);
-                       SemanticRule_Break()}
+                        SemanticAction_Break();}
 
            | CONTINUE SC  {$$ = new State_Obj($1->name,$1);
-                           SemanticRule_Continue()}
+                           SemanticAction_Continue();}
 
 
 Call: ID LPAREN Exp RPAREN {$$ = new Call_Obj($1->name,$1,$3);
-                            SemanticAction_Call($$,$1,$3);}
+                            SemanticAction_Call(dynamic_cast<Exp_Obj*>($$),$1,$3);}
 
 Type: INT {$$ = new Type_Obj($1->name,"int");}
       | BYTE {$$ = new Type_Obj($1->name,"byte");}
@@ -86,7 +86,7 @@ Type: INT {$$ = new Type_Obj($1->name,"int");}
 
 Exp: LPAREN Exp RPAREN {$$ = new Exp_Obj($1->name,dynamic_cast<Exp_Obj*>($2));}
      | Exp PLUSMINUS Exp {$$ = new Exp_Obj($1->name,$1,$3,"int");
-                          SemanticAction_Binop($$,dynamic_cast<Exp_Obj*>($1),$2,dynamic_cast<Exp_Obj*>($3));}
+                          SemanticAction_Binop(dynamic_cast<Exp_Obj*>($$),dynamic_cast<Exp_Obj*>($1),$2,dynamic_cast<Exp_Obj*>($3));}
 
      | Exp MULDIV Exp {$$ = new Exp_Obj($1->name,$1,$3,"int");
                        SemanticAction_Binop($$,dynamic_cast<Exp_Obj*>($1),$2,dynamic_cast<Exp_Obj*>($3));}
