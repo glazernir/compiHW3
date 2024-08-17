@@ -39,7 +39,7 @@ void SemanticAction_Relop(Exp_Obj*,Exp_Obj*,Object*,Exp_Obj*);
 void SemanticAction_Load(Exp_Obj*, Object*);
 void SemanticAction_Variable(Exp_Obj*, Object*,string);
 void SemanticAction_Not(Exp_Obj*, Exp_Obj*);
-void SemanticActoin_And(Exp_Obj*, Exp_Obj*,Exp_Obj*,string);
+void SemanticAction_And(Exp_Obj*, Exp_Obj*,Exp_Obj*,string);
 void SemanticAction_Or(Exp_Obj*, Exp_Obj*, Exp_Obj*,string);
 void SemanticAction_Paren(Exp_Obj*,Exp_Obj*);
 

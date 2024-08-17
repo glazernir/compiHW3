@@ -349,7 +349,7 @@ void SemanticAction_Or(Exp_Obj* res, Exp_Obj* first, Exp_Obj* second, string eva
     }
 }
 
-void SemanticActoin_And(Exp_Obj* res, Exp_Obj* first, Exp_Obj* second,string evalSide) {
+void SemanticAction_And(Exp_Obj* res, Exp_Obj* first, Exp_Obj* second,string evalSide) {
     CodeBuffer& Buffer = CodeBuffer::instance();
     if(evalSide == "Left") {
         Buffer.emit("br label %" + first->trueLabel);

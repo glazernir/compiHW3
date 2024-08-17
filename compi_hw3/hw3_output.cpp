@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <sstream>
+#include "hw3_output.hpp"
 
 using namespace std;
 
