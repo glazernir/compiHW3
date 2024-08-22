@@ -58,23 +58,28 @@ Statement: LBRACE {symbolTableStack.make_table(false);} Statements {symbolTableS
            | RETURN SC  {$$ = new State_Obj($1->name,$1);
                          SemanticAction_Return();}
 
-           | IF LPAREN EVAL RPAREN Statement {$$ = new State_Obj($1->name,dynamic_cast<Exp_Obj*>($3));
-                                              symbolTableStack.pop_table();
-                                              goto_False_Label(dynamic_cast<Exp_Obj*>($3));}
+           | IF LPAREN VerifyBool RPAREN NS Statement {$$ = new State_Obj($1->name,dynamic_cast<Exp_Obj*>($3));
+                                                       symbolTableStack.pop_table();
+                                                       goto_False_Label(dynamic_cast<Exp_Obj*>($3));}
 
 
-           | IF LPAREN EVAL RPAREN Statement ELSE {symbolTableStack.pop_table(); createAndJumpTo(); goto_False_Label(dynamic_cast<Exp_Obj*>($3));} NS Statement {$$ = new State_Obj($1->name,dynamic_cast<Exp_Obj*>($3));
-                                                                                                                                                                symbolTableStack.pop_table();
-                                                                                                                                                                goto_True_Label(dynamic_cast<Exp_Obj*>($8));}
+           | IF LPAREN VerifyBool RPAREN NS Statement ELSE {symbolTableStack.pop_table(); $6 = createAndJumpTo(); goto_False_Label(dynamic_cast<Exp_Obj*>($3));} NS Statement {$$ = new State_Obj($1->name,dynamic_cast<Exp_Obj*>($3));
+                                                                                                                                                                               symbolTableStack.pop_table();
+                                                                                                                                                                               goto_True_Label(dynamic_cast<Exp_Obj*>($6));}
 
-           | WHILE LPAREN VerifyBool RPAREN {symbolTableStack.make_table(true); SemanticAction_While(dynamic_cast<Exp_Obj*>($3));} Statement {$$ = new State_Obj($1->name,dynamic_cast<Exp_Obj*>($3));
-                                                                                                                                             symbolTableStack.pop_table();}
+           | WHILE {symbolTableStack.make_table(true);} LPAREN Exp RPAREN {SemanticAction_While(dynamic_cast<Exp_Obj*>($4));} Statement {$$ = new State_Obj($1->name,dynamic_cast<Exp_Obj*>($4));
+                                                                                                                                         symbolTableStack.pop_table();}
 
            | BREAK SC {$$ = new State_Obj($1->name,$1);
                         SemanticAction_Break();}
 
            | CONTINUE SC  {$$ = new State_Obj($1->name,$1);
                            SemanticAction_Continue();}
+
+NS: {symbolTableStack.make_table(false);}
+
+VerifyBool: Exp {VerifyBool($1);
+                 goto_True_Label(dynamic_cast<Exp_Obj*>($1));}
 
 
 Call: ID LPAREN Exp RPAREN {$$ = new Call_Obj($1->name,$1,$3);
@@ -84,7 +89,8 @@ Type: INT {$$ = new Type_Obj($1->name,"int");}
       | BYTE {$$ = new Type_Obj($1->name,"byte");}
       | BOOL {$$ = new Type_Obj($1->name,"bool");}
 
-Exp: LPAREN Exp RPAREN {$$ = new Exp_Obj($1->name,dynamic_cast<Exp_Obj*>($2));}
+Exp: LPAREN Exp RPAREN {$$ = $2;}
+
      | Exp PLUSMINUS Exp {$$ = new Exp_Obj($1->name,$1,$3,"int");
                           SemanticAction_Binop(dynamic_cast<Exp_Obj*>($$),dynamic_cast<Exp_Obj*>($1),$2,dynamic_cast<Exp_Obj*>($3));}
 
@@ -94,7 +100,8 @@ Exp: LPAREN Exp RPAREN {$$ = new Exp_Obj($1->name,dynamic_cast<Exp_Obj*>($2));}
      | ID {$$ = new Exp_Obj($1->name,true,$1);
            SemanticAction_Load(dynamic_cast<Exp_Obj*>($$), $1);}
 
-     | Call {$$ = new Exp_Obj($1->name,false,$1);}
+     | Call {$$ = new Exp_Obj($1->name,false,$1);
+             $$->register_val = $1->register_val;}
 
      | NUM  {$$ = new Exp_Obj($1->name,$1,"int");
              SemanticAction_Variable(dynamic_cast<Exp_Obj*>($$),$1,"int");}
@@ -105,20 +112,22 @@ Exp: LPAREN Exp RPAREN {$$ = new Exp_Obj($1->name,dynamic_cast<Exp_Obj*>($2));}
      | STRING {$$ = new Exp_Obj($1->name,$1,"string");
                SemanticAction_Variable(dynamic_cast<Exp_Obj*>($$),$1,"string");}
 
-     | TRUE {$$ = new Exp_Obj($1->name,$1,"True");
+     | TRUE {$$ = new Exp_Obj($1->name,$1,"bool");
              SemanticAction_Variable(dynamic_cast<Exp_Obj*>($$),$1,"True");}
 
-     | FALSE {$$ = new Exp_Obj($1->name,$1,"False");
+     | FALSE {$$ = new Exp_Obj($1->name,$1,"bool");
               SemanticAction_Variable(dynamic_cast<Exp_Obj*>($$),$1,"False");}
 
      | NOT Exp {$$ = new Exp_Obj($1->name,$2,$2,$1->name,"bool");
                 SemanticAction_Not(dynamic_cast<Exp_Obj*>($$),dynamic_cast<Exp_Obj*>($2));}
 
-     | Exp AND {SemanticAction_And(dynamic_cast<Exp_Obj*>($1),dynamic_cast<Exp_Obj*>($1),dynamic_cast<Exp_Obj*>($1),"Left");} Exp {$$ = new Exp_Obj($1->name,$1,$3,$2->name,"bool");
-                                                                                                                                  SemanticAction_And(dynamic_cast<Exp_Obj*>($$),dynamic_cast<Exp_Obj*>($1),dynamic_cast<Exp_Obj*>($4),"Right");}
+     | Exp AND {SemanticAction_And(dynamic_cast<Exp_Obj*>($1),dynamic_cast<Exp_Obj*>($1),dynamic_cast<Exp_Obj*>($1),"Left");} Exp {$$ = new Exp_Obj($1->name,$1,$4,$2->name,"bool");
+                                                                                                                                   SemanticAction_And(dynamic_cast<Exp_Obj*>($$),dynamic_cast<Exp_Obj*>($1),dynamic_cast<Exp_Obj*>($4),"Right");}
 
-     | Exp OR {SemanticAction_Or(dynamic_cast<Exp_Obj*>($1),dynamic_cast<Exp_Obj*>($1),dynamic_cast<Exp_Obj*>($1),"Left");} Exp {$$ = new Exp_Obj($1->name,$1,$3,$2->name,"bool");
-                                                                                                                                SemanticAction_Or(dynamic_cast<Exp_Obj*>($$),dynamic_cast<Exp_Obj*>($1),dynamic_cast<Exp_Obj*>($4),"Right");}
+
+     | Exp OR {SemanticAction_Or(dynamic_cast<Exp_Obj*>($1),dynamic_cast<Exp_Obj*>($1),dynamic_cast<Exp_Obj*>($1),"Left");} Exp {$$ = new Exp_Obj($1->name,$1,$4,$2->name,"bool");
+                                                                                                                                 SemanticAction_Or(dynamic_cast<Exp_Obj*>($$),dynamic_cast<Exp_Obj*>($1),dynamic_cast<Exp_Obj*>($4),"Right");}
+
 
      | Exp RELOPEQUAL Exp {$$ = new Exp_Obj($1->name,$1,$3,$2->name,"relop");
                            SemanticAction_Relop(dynamic_cast<Exp_Obj*>($$),dynamic_cast<Exp_Obj*>($1),$2,dynamic_cast<Exp_Obj*>($3));}
@@ -126,17 +135,9 @@ Exp: LPAREN Exp RPAREN {$$ = new Exp_Obj($1->name,dynamic_cast<Exp_Obj*>($2));}
      | Exp RELOPUNEQUAL Exp {$$ = new Exp_Obj($1->name,$1,$3,$2->name,"relop");
                              SemanticAction_Relop(dynamic_cast<Exp_Obj*>($$),dynamic_cast<Exp_Obj*>($1),$2,dynamic_cast<Exp_Obj*>($3));}
 
-     | LPAREN Type RPAREN Exp {$$ = new Exp_Obj($1->name,$2,$4);
-                               SemanticAction_Paren(dynamic_cast<Exp_Obj*>($$),dynamic_cast<Exp_Obj*>($3));}
+     | LPAREN Type RPAREN Exp {$$ = new Exp_Obj($1->name,$2,$4); SemanticAction_Paren(dynamic_cast<Exp_Obj*>($$),$4);}
 
 
-EVAL: Exp {symbolTableStack.make_table(false);
-           VerifyBool($1);
-           goto_True_Label(dynamic_cast<Exp_Obj*>($1));}
-
-NS: {symbolTableStack.make_table(false);}
-
-VerifyBool: Exp {VerifyBool($1);}
 
 %%
 

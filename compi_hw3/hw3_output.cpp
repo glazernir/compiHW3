@@ -3,7 +3,10 @@
 #include <sstream>
 #include "hw3_output.hpp"
 
+#include "hw3_output.hpp"
+
 using namespace std;
+
 
 void output::endScope(){
     cout << "---end scope---" << endl;

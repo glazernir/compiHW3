@@ -2,7 +2,7 @@
 // Created by Nir on 7/8/2024.
 //
 
-#include "SymbolTable.h"
+#include "SymbolTable_backup.h"
 #include <utility>
 #include "hw3_output.hpp"
 #include "cg.hpp"
@@ -325,9 +325,13 @@ Symbol::Symbol(std::string name, std::string type, int offset, bool isSymbolFunc
 Symbol_Table::Symbol_Table(bool isWhileScope): Table() {
     CodeBuffer& Buffer = CodeBuffer::instance();
     this->is_while_scope = isWhileScope;
-    this->startScopeLabel = Buffer.freshLabel();
-    Buffer.emit("br label " + this->startScopeLabel);
-    Buffer.emit(this->startScopeLabel + ":");
+    int debug = isWhileScope ? 1:0;
+    Buffer.emit("you are in make_table. the result is " + to_string(debug));
+    if(is_while_scope) {
+        this->startScopeLabel = Buffer.freshLabel();
+        Buffer.emit("br label " + this->startScopeLabel);
+        Buffer.emit(this->startScopeLabel + ":");
+    }
 }
 
 void Symbol_Table::insert_Symbol_to_table(const Symbol &symbol_to_insert) {
@@ -393,12 +397,12 @@ void Symbol_table_stack::print_scope(const Symbol_Table &symbol_table)
     {
         int s_offset = this->offset_stack.back();
         this->offset_stack.pop_back();
-        if(!s->is_symbol_function){
-            output::printID(s->symbol_Name,s->symbol_Offset, type_to_send(s->symbol_Type));
-        }
-        else{
-            cout << s->symbol_Name << " " << output::makeFunctionType(type_to_send(s->arg_type), type_to_send(s->symbol_Type)) << " " << s->symbol_Offset <<endl;
-        }
+        // if(!s->is_symbol_function){
+        //     output::printID(s->symbol_Name,s->symbol_Offset, type_to_send(s->symbol_Type));
+        // }
+        // else{
+        //     cout << s->symbol_Name << " " << output::makeFunctionType(type_to_send(s->arg_type), type_to_send(s->symbol_Type)) << " " << s->symbol_Offset <<endl;
+        // }
     }
 }
 
@@ -406,7 +410,7 @@ void Symbol_table_stack::pop_table()
 {
     Symbol_Table* to_delete = this->symbol_table_stack.back();
     this->symbol_table_stack.pop_back();
-    output::endScope();
+    //output::endScope();
     print_scope(*to_delete);
     if(this->offset_stack.size() > 0){
         this->offset_stack.pop_back();

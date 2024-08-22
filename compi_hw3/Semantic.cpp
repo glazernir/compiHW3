@@ -73,7 +73,7 @@ string print_impleminatino() {
 void varsAllocations() {
     CodeBuffer& Buffer = CodeBuffer::instance();
     for (int i = 0;i < 50;i++) {
-        Buffer.emit("%reg_" + to_string(i) + " = alloca i32");
+        Buffer.emit("%local_" + to_string(i) + " = alloca i32");
     }
 }
 
@@ -90,7 +90,7 @@ void SemanticAction_StartProgaram() {
     Buffer.emitGlobal(printi_implemination());
     Buffer.emitGlobal(print_impleminatino());
     Buffer.emitGlobal(readi_implemination());
-    Buffer.emit("“define i32 @main(){“");
+    Buffer.emit("define i32 @main() {");
     varsAllocations();
 }
 
@@ -109,43 +109,64 @@ void goto_False_Label(Exp_Obj *expression) {
 }
 void goto_True_Label(Exp_Obj *expression) {
     CodeBuffer& Buffer = CodeBuffer::instance();
+    //Buffer.emit("expression name is: " + expression->name);
     Buffer.emit("br label %" + expression->trueLabel);
     Buffer.emit(expression->trueLabel + ":");
 }
 
-void createAndJumpTo() {
-    CodeBuffer& Buffer = CodeBuffer::instance();
-    string newLabel = Buffer.freshLabel();
-    Buffer.emit("br label %" + newLabel);
-}
 
+Exp_Obj* createAndJumpTo() {
+    CodeBuffer& Buffer = CodeBuffer::instance();
+    Exp_Obj* labelObject = new Exp_Obj("label");
+    string newLabel = Buffer.freshLabel();
+    labelObject->trueLabel = newLabel;
+    Buffer.emit("br label %" + newLabel);
+    return labelObject;
+}
 
 void SemanticAction_DefaultInitialize(Object* object) {
 
     Symbol* s = symbolTableStack.get_symbol_by_name(object->name);
     CodeBuffer& Buffer = CodeBuffer::instance();
-    string toStore = "reg_" + to_string(s->symbol_Offset);
-    Buffer.emit("Store i32 0, i32* %" + toStore);
+    string toStore = "local_" + to_string(s->symbol_Offset);
+    Buffer.emit("store i32 0, i32* %" + toStore);
+}
+
+void generate_phi_llvm(Exp_Obj* expression,string toStore) {
+    CodeBuffer& Buffer = CodeBuffer::instance();
+    string exitLabel = Buffer.freshLabel();
+    string res = Buffer.freshVar();
+    Buffer.emit(expression->trueLabel + ":");
+    Buffer.emit("br label %" + exitLabel);
+    Buffer.emit(expression->falseLabel + ":");
+    Buffer.emit("br label %" + exitLabel);
+    Buffer.emit(exitLabel + ":");
+    Buffer.emit(res + " = phi i32 [0, %" + expression->falseLabel + "], [1, %" + expression->trueLabel + "]");
+    Buffer.emit("store i32 " + res + ", i32* %" + toStore);
 }
 
 void SemanticAction_Store(Object* object, Exp_Obj* expression) {
-    Symbol* s = symbolTableStack.get_symbol_by_name(object->name);
-    string toStore = "reg_" + to_string(s->symbol_Offset);
+
     CodeBuffer& Buffer = CodeBuffer::instance();
+    Symbol* s = symbolTableStack.get_symbol_by_name(object->name);
+    string toStore = "local_" + to_string(s->symbol_Offset);
     string exitLabel = Buffer.freshLabel();
     string res = Semantic::freshVar();
+    //string res = Buffer.freshVar();
+
     if (expression->type == "bool") {
+        //generate_phi_llvm(expression,toStore);
         Buffer.emit(expression->trueLabel + ":");
         Buffer.emit("br label %" + exitLabel);
         Buffer.emit(expression->falseLabel + ":");
         Buffer.emit("br label %" + exitLabel);
         Buffer.emit(exitLabel + ":");
-        Buffer.emit("%" + res + " = phi i32 [0, %" + expression->falseLabel + "], [1, %" + expression->trueLabel + "]");
+        Buffer.emit(res + " = phi i32 [0, %" + expression->falseLabel + "], [1, %" + expression->trueLabel + "]");
         Buffer.emit("store i32 " + res + ", i32* %" + toStore);
     }
     else {
         string expression_reg_value = expression->register_val;
-        Buffer.emit("store i32 " + expression_reg_value + ", i32 %" + toStore );
+        Buffer.emit("store i32 " + expression_reg_value + ", i32* %" + toStore );
     }
 }
 
@@ -175,7 +196,8 @@ void SemanticAction_Call(Call_Obj *call_obj, Object *funcName, Object *funcArg) 
     CodeBuffer& Buffer = CodeBuffer::instance();
     if (funcName->name == "readi") {
         call_obj->register_val = Semantic::freshVar();
-        Buffer.emit("%"+ call_obj->register_val + " = call i32 @readi(i32 0)");
+        //call_obj->register_val = Buffer.freshVar();
+        Buffer.emit(call_obj->register_val + " = call i32 @readi(i32 0)");
         return;
     }
     if (funcName->name == "printi") {
@@ -184,7 +206,7 @@ void SemanticAction_Call(Call_Obj *call_obj, Object *funcName, Object *funcArg) 
     }
     if (funcName->name == "print") {
         Buffer.emit("call void (i8*) @print(i8* getelementptr ([" + to_string(funcArg->name.size()-1) +
-                            " x i8], [" + to_string(funcArg->name.size()-1) + " x i8]* " + funcArg->register_val + ", i32 0,i 32 0");
+                            " x i8], [" + to_string(funcArg->name.size()-1) + " x i8]* " + funcArg->register_val + ", i32 0,i32 0))");
     }
 }
 
@@ -205,7 +227,7 @@ string toLLVMBinopOperation(string operation) {
 
 string toLLVMRelopOperation(string operation) {
     if (operation == "==") {
-        return("ep");
+        return("eq");
     }
     if(operation == "!=") {
         return("ne");
@@ -227,6 +249,7 @@ string toLLVMRelopOperation(string operation) {
 string truncationByteRes(string resRegister) {
     CodeBuffer& Buffer = CodeBuffer::instance();
     string truncRes = Semantic::freshVar();
+    //string truncRes = Buffer.freshVar();
     Buffer.emit(truncRes + " = and i32 " + resRegister + ", 255");
     return truncRes;
 }
@@ -243,17 +266,20 @@ void SemanticAction_Binop(Exp_Obj* res, Exp_Obj* first, Object* operation, Exp_O
     string llvmOperation = toLLVMBinopOperation(operation->name);
     if (llvmOperation == "sdiv") {
         string condition = Semantic::freshVar();
+        //string condition = Buffer.freshVar();
         string errorDivision = Buffer.freshLabel();
+        string notErrorDivision = Buffer.freshLabel();
         Buffer.emit(condition + " = icmp eq i32" + second->register_val + " ,0");
+        Buffer.emit("br i1 " + condition + ", label %" + errorDivision + ", label %" + notErrorDivision);
         Buffer.emit(errorDivision + ":");
         zeroDivisionHandler();
-        string next = Buffer.freshLabel();
-        Buffer.emit("br label %" + next);
-        Buffer.emit(next + ":");
+        Buffer.emit("br label %" + notErrorDivision);
+        Buffer.emit(notErrorDivision + ":");
     }
     string resRegister = Semantic::freshVar();
+    //string resRegister = Buffer.freshVar();
     Buffer.emit(resRegister + " = " + llvmOperation + " i32 " + first->register_val + ", " + second->register_val);
-    if(first->type == "BYTE" && second->type == "BYTE") {
+    if(first->type == "byte" && second->type == "byte") {
         res->register_val = truncationByteRes(resRegister);
         return;
     }
@@ -267,33 +293,41 @@ void SemanticAction_Relop(Exp_Obj* res, Exp_Obj* first, Object* operation, Exp_O
 
     res->falseLabel = Buffer.freshLabel();
     res->trueLabel = Buffer.freshLabel();
+    //
+    // Buffer.emit("666 " + res->name);
+    // Buffer.emit("666 " + res->falseLabel);
+    // Buffer.emit("666 " + res->trueLabel);
 
     string condition = Semantic::freshVar();
-    Buffer.emit(condition + " = icmp " + llvmOperation + " i32 " + "%" + first->register_val + ", %" + second->register_val);
-    Buffer.emit("br i1 " + condition + " label %" + res->trueLabel + ", label %" + res->falseLabel);
+    //string condition = Buffer.freshVar();
+    Buffer.emit(condition + " = icmp " + llvmOperation + " i32 " + first->register_val + ", " + second->register_val);
+    Buffer.emit("br i1 " + condition + ", label %" + res->trueLabel + ", label %" + res->falseLabel);
 }
 
 void SemanticAction_Load(Exp_Obj* res, Object* toLoad) {
     CodeBuffer& Buffer = CodeBuffer::instance();
     Symbol* s = symbolTableStack.get_symbol_by_name(toLoad->name);
-    string toLoad_reg = "reg_" + s->symbol_Offset;
+    string toLoad_reg = "local_" + to_string(s->symbol_Offset);
     string resRegister = Semantic::freshVar();
-    Buffer.emit("%" + resRegister + " = i32, i32* %" +toLoad_reg);
+    //string resRegister = Buffer.freshVar();
+    Buffer.emit(resRegister + " = load i32, i32* %" +toLoad_reg);
     res->register_val = resRegister;
-    if(s->symbol_Type == "BOOL") {
+    if(s->symbol_Type == "bool") {
         res->falseLabel = Buffer.freshLabel();
         res->trueLabel = Buffer.freshLabel();
         string condition = Semantic::freshVar();
+        //string condition = Buffer.freshVar();
         Buffer.emit(condition + " = icmp " + "eq " + " i32 " + resRegister + ", 1");
-        Buffer.emit("br i1 " + condition + " label %" + res->trueLabel + ", label %" + res->falseLabel);
+        Buffer.emit("br i1 " + condition + ", label %" + res->trueLabel + ", label %" + res->falseLabel);
     }
 }
 
 string declareStringAsGlobalVar(string str1){
     CodeBuffer& Buffer = CodeBuffer::instance();
-    string registerRes = Semantic::freshGlobalVar();
+    //string registerRes = Semantic::freshGlobalVar();
+    string registerRes = Buffer.freshGlobalVar();
     string stringLiteral = str1.erase(str1.size() - 1) + "\\00\"";
-    Buffer.emitGlobal(registerRes + " = private unnamed_addr constant [" + to_string(str1.size()-1) + " x i8] c" + stringLiteral);
+    Buffer.emitGlobal(registerRes + " = private unnamed_addr constant [" + to_string(str1.size()) + " x i8] c" + stringLiteral);
     return registerRes;
 }
 
@@ -301,15 +335,19 @@ void SemanticAction_Variable(Exp_Obj* res, Object* variableObject, string variab
     CodeBuffer& Buffer = CodeBuffer::instance();
 
     if (variableType == "int"){
+        // Buffer.emit("6666" + res->name);
         string registerRes = Semantic::freshVar();
+        //string registerRes = Buffer.freshVar();
         Buffer.emit(registerRes + " = add i32 " + variableObject->name + ", 0");
         res->register_val = registerRes;
         return;
     }
     if (variableType == "byte") {
         string registerRes = Semantic::freshVar();
+        //string registerRes = Buffer.freshVar();
         string extendedRegisterRes = Semantic::freshVar();
-        Buffer.emit(registerRes + " = add i32 " + variableObject->name + ", 0");
+        //string extendedRegisterRes = Buffer.freshVar();
+        Buffer.emit(registerRes + " = add i8 " + variableObject->name + ", 0");
         Buffer.emit(extendedRegisterRes + " = zext i8 " + registerRes + " to i32");
         res->register_val = extendedRegisterRes;
         return;
@@ -320,10 +358,14 @@ void SemanticAction_Variable(Exp_Obj* res, Object* variableObject, string variab
         return;
     }
     if(variableType == "True") {
+        res->trueLabel = Buffer.freshLabel();
+        res->falseLabel = Buffer.freshLabel();
         Buffer.emit("br label %" + res->trueLabel);
         return;
     }
     if(variableType == "False") {
+        res->trueLabel = Buffer.freshLabel();
+        res->falseLabel = Buffer.freshLabel();
         Buffer.emit("br label %" + res->falseLabel);
     }
 }
@@ -331,6 +373,8 @@ void SemanticAction_Variable(Exp_Obj* res, Object* variableObject, string variab
 
 void SemanticAction_Not(Exp_Obj* notExpression, Exp_Obj* expression) {
     CodeBuffer& Buffer = CodeBuffer::instance();
+    // Buffer.emit(expression->name + "True label is" + expression->trueLabel);
+    // Buffer.emit(expression->name + "false Label is" + expression->falseLabel);
     notExpression->falseLabel = expression->trueLabel;
     notExpression->trueLabel = expression->falseLabel;
 }
@@ -345,7 +389,7 @@ void SemanticAction_Or(Exp_Obj* res, Exp_Obj* first, Exp_Obj* second, string eva
         res->falseLabel = second->falseLabel;
         res->trueLabel = second->trueLabel;
         Buffer.emit(first->trueLabel + ":");
-        Buffer.emit("br label % " + res->trueLabel);
+        Buffer.emit("br label %" + res->trueLabel);
     }
 }
 
@@ -356,25 +400,27 @@ void SemanticAction_And(Exp_Obj* res, Exp_Obj* first, Exp_Obj* second,string eva
         Buffer.emit(first->trueLabel + ":");
         return;
     }
-
     if (evalSide == "Right") {
         res->falseLabel = second->falseLabel;
         res->trueLabel = second->trueLabel;
         Buffer.emit("br label %" + first->falseLabel);
         Buffer.emit(first->falseLabel + ":");
-        Buffer.emit("br label % " + res->falseLabel);
+        Buffer.emit("br label %" + res->falseLabel);
     }
 }
 
-void SemanticAction_Paren(Exp_Obj* res, Exp_Obj* expression) {
+void SemanticAction_Paren(Exp_Obj* res, Object* expression) {
+    // CodeBuffer& Buffer = CodeBuffer::instance();
+    // Buffer.emit(expression->name + " register val is " + expression->register_val);
     res->register_val = expression->register_val;
+    // res->falseLabel = expression->falseLabel;
+    // res->trueLabel = expression->trueLabel;
 }
 
-
-
-
-
-
+void Aux_Call(Call_Obj* c) {
+    CodeBuffer& Buffer = CodeBuffer::instance();
+    Buffer.emit("returned from function readi: " + c->register_val);
+}
 
 
 
