@@ -41,7 +41,7 @@ void SemanticAction_Variable(Exp_Obj*, Object*,string);
 void SemanticAction_Not(Exp_Obj*, Exp_Obj*);
 void SemanticAction_And(Exp_Obj*, Exp_Obj*,Exp_Obj*,string);
 void SemanticAction_Or(Exp_Obj*, Exp_Obj*, Exp_Obj*,string);
-void SemanticAction_Paren(Exp_Obj*,Object*);
+void SemanticAction_RegAssign(Exp_Obj*,Object*);
 
 void Aux_Call(Call_Obj* c);
 void zeroDivisionHandler();

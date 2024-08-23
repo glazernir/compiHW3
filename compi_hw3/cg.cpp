@@ -17,17 +17,17 @@ string CodeBuffer::freshLabel(){
 	return label.str();
 }
 
-string CodeBuffer::freshVar() {
-	std::stringstream var;
-	var << "reg_" << ++register_num;
-	return var.str();
-}
-
-std::string CodeBuffer::freshGlobalVar() {
-	std::stringstream var;
-	var << "@.reg_" << ++register_num;
-	return var.str();
-}
+// string CodeBuffer::freshVar() {
+// 	std::stringstream var;
+// 	var << "reg_" << ++register_num;
+// 	return var.str();
+// }
+//
+// std::string CodeBuffer::freshGlobalVar() {
+// 	std::stringstream var;
+// 	var << "@.reg_" << ++register_num;
+// 	return var.str();
+// }
 
 int CodeBuffer::emit(const string &s){
     buffer.push_back(s);

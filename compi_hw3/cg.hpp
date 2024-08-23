@@ -23,9 +23,9 @@ public:
 	//generates a jump location label for the next command and returns it
 	std::string freshLabel();
 
-	std::string freshVar();
-
-	std::string freshGlobalVar();
+	// std::string freshVar();
+	//
+	// std::string freshGlobalVar();
 
 	//writes command to the buffer, returns its location in the buffer
 	int emit(const std::string &command);

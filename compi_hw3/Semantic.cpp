@@ -28,17 +28,27 @@ Semantic &Semantic::instacne() {
     return s;
 }
 
+
+string getObjectVar(Object* object) {
+    CodeBuffer& Buffer = CodeBuffer::instance();
+    Symbol* s = symbolTableStack.get_symbol_by_name(object->name);
+    string res = "local" + to_string(s->symbol_Offset);
+    return res;
+}
+
+
+
 std::string Semantic::freshVar() {
     std::string stringIndex = std::to_string(instacne().get());
     instacne().increment();
-    std::string res = "%reg_" + stringIndex;
+    std::string res = "%freshVar" + stringIndex;
     return res;
 }
 
 string Semantic::freshGlobalVar() {
     std::string stringIndex = std::to_string(instacne().get());
     instacne().increment();
-    string res = "@.reg_" + stringIndex;
+    string res = "@.freshVar" + stringIndex;
     return res;
 }
 
@@ -73,7 +83,7 @@ string print_impleminatino() {
 void varsAllocations() {
     CodeBuffer& Buffer = CodeBuffer::instance();
     for (int i = 0;i < 50;i++) {
-        Buffer.emit("%local_" + to_string(i) + " = alloca i32");
+        Buffer.emit("%local" + to_string(i) + " = alloca i32");
     }
 }
 
@@ -126,16 +136,15 @@ Exp_Obj* createAndJumpTo() {
 
 void SemanticAction_DefaultInitialize(Object* object) {
 
-    Symbol* s = symbolTableStack.get_symbol_by_name(object->name);
     CodeBuffer& Buffer = CodeBuffer::instance();
-    string toStore = "local_" + to_string(s->symbol_Offset);
+    string toStore = getObjectVar(object);
     Buffer.emit("store i32 0, i32* %" + toStore);
 }
 
 void generate_phi_llvm(Exp_Obj* expression,string toStore) {
     CodeBuffer& Buffer = CodeBuffer::instance();
     string exitLabel = Buffer.freshLabel();
-    string res = Buffer.freshVar();
+    string res = Semantic::freshVar();
     Buffer.emit(expression->trueLabel + ":");
     Buffer.emit("br label %" + exitLabel);
     Buffer.emit(expression->falseLabel + ":");
@@ -148,21 +157,13 @@ void generate_phi_llvm(Exp_Obj* expression,string toStore) {
 void SemanticAction_Store(Object* object, Exp_Obj* expression) {
 
     CodeBuffer& Buffer = CodeBuffer::instance();
-    Symbol* s = symbolTableStack.get_symbol_by_name(object->name);
-    string toStore = "local_" + to_string(s->symbol_Offset);
+    string toStore = getObjectVar(object);
     string exitLabel = Buffer.freshLabel();
     string res = Semantic::freshVar();
     //string res = Buffer.freshVar();
 
     if (expression->type == "bool") {
-        //generate_phi_llvm(expression,toStore);
-        Buffer.emit(expression->trueLabel + ":");
-        Buffer.emit("br label %" + exitLabel);
-        Buffer.emit(expression->falseLabel + ":");
-        Buffer.emit("br label %" + exitLabel);
-        Buffer.emit(exitLabel + ":");
-        Buffer.emit(res + " = phi i32 [0, %" + expression->falseLabel + "], [1, %" + expression->trueLabel + "]");
-        Buffer.emit("store i32 " + res + ", i32* %" + toStore);
+        generate_phi_llvm(expression,toStore);
     }
     else {
         string expression_reg_value = expression->register_val;
@@ -307,7 +308,7 @@ void SemanticAction_Relop(Exp_Obj* res, Exp_Obj* first, Object* operation, Exp_O
 void SemanticAction_Load(Exp_Obj* res, Object* toLoad) {
     CodeBuffer& Buffer = CodeBuffer::instance();
     Symbol* s = symbolTableStack.get_symbol_by_name(toLoad->name);
-    string toLoad_reg = "local_" + to_string(s->symbol_Offset);
+    string toLoad_reg = getObjectVar(toLoad);
     string resRegister = Semantic::freshVar();
     //string resRegister = Buffer.freshVar();
     Buffer.emit(resRegister + " = load i32, i32* %" +toLoad_reg);
@@ -324,8 +325,8 @@ void SemanticAction_Load(Exp_Obj* res, Object* toLoad) {
 
 string declareStringAsGlobalVar(string str1){
     CodeBuffer& Buffer = CodeBuffer::instance();
-    //string registerRes = Semantic::freshGlobalVar();
-    string registerRes = Buffer.freshGlobalVar();
+    string registerRes = Semantic::freshGlobalVar();
+    //string registerRes = Buffer.freshGlobalVar();
     string stringLiteral = str1.erase(str1.size() - 1) + "\\00\"";
     Buffer.emitGlobal(registerRes + " = private unnamed_addr constant [" + to_string(str1.size()) + " x i8] c" + stringLiteral);
     return registerRes;
@@ -409,7 +410,7 @@ void SemanticAction_And(Exp_Obj* res, Exp_Obj* first, Exp_Obj* second,string eva
     }
 }
 
-void SemanticAction_Paren(Exp_Obj* res, Object* expression) {
+void SemanticAction_RegAssign(Exp_Obj* res, Object* expression) {
     // CodeBuffer& Buffer = CodeBuffer::instance();
     // Buffer.emit(expression->name + " register val is " + expression->register_val);
     res->register_val = expression->register_val;
