@@ -224,6 +224,7 @@ string toLLVMBinopOperation(string operation) {
     if(operation == "/") {
         return("sdiv");
     }
+    return ("");
 }
 
 string toLLVMRelopOperation(string operation) {
@@ -245,6 +246,7 @@ string toLLVMRelopOperation(string operation) {
     if(operation == ">=") {
         return("sge");
     }
+    return ("");
 }
 
 string truncationByteRes(string resRegister) {
